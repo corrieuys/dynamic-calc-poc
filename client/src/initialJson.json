@@ -1,0 +1,45 @@
+{
+  "calculations": [
+    {
+      "name": "Calculation 1",
+      "outputVariable": "result1",
+      "calculator": {
+        "operation": "add",
+        "operands": [
+          {
+            "variable": "accidentalFactor"
+          },
+          {
+            "variable": "topUpExpenseFactor"
+          },
+          {
+            "operation": "multiply",
+            "operands": [
+              {
+                "literal": 2
+              },
+              {
+                "variable": "coverAmount"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Calculation 2",
+      "outputVariable": "result2",
+      "calculator": {
+        "operation": "multiply",
+        "operands": [
+          {
+            "variable": "result1"
+          },
+          {
+            "literal": 4
+          }
+        ]
+      }
+    }
+  ]
+}
