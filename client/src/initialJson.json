@@ -1,42 +1,60 @@
 {
-  "calculations": [
+  "calculatorName": "Insurance Policy Calculations",
+  "id": "IPC-001",
+  "calculationConfigs": [
     {
-      "name": "Calculation 1",
-      "outputVariable": "result1",
-      "calculator": {
-        "operation": "add",
+      "calculationName": "Intermediate Calc",
+      "outputVariable": "tempResult",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "multiply",
         "operands": [
-          {
-            "variable": "accidentalFactor"
-          },
-          {
-            "variable": "topUpExpenseFactor"
-          },
-          {
-            "operation": "multiply",
-            "operands": [
-              {
-                "literal": 2
-              },
-              {
-                "variable": "coverAmount"
-              }
-            ]
-          }
+          { "type": "variable", "variable": "accidentalFactor" },
+          { "type": "literal", "literal": 2 }
         ]
       }
     },
     {
-      "name": "Calculation 2",
-      "outputVariable": "result2",
-      "calculator": {
+      "calculationName": "Base Cover",
+      "outputVariable": "cover",
+      "calculationExpression": {
+        "type": "operation",
         "operation": "multiply",
         "operands": [
+          { "type": "variable", "variable": "coverAmount" },
+          { "type": "literal", "literal": 2 }
+        ]
+      }
+    },
+    {
+      "calculationName": "Premium Adjustment",
+      "outputVariable": "premium",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "if",
+        "comparator": "isStringValue",
+        "operands": [
+          { "type": "variable", "variable": "policyType" },
+          { "type": "literal", "literal": "standard" },
           {
-            "variable": "result1"
+            "calculationExpression": {
+              "type": "operation",
+              "operation": "multiply",
+              "operands": [
+                { "type": "variable", "variable": "coverAmount" },
+                { "type": "variable", "variable": "tempResult" }
+              ]
+            }
           },
           {
-            "literal": 4
+            "calculationExpression": {
+              "type": "operation",
+              "operation": "multiply",
+              "operands": [
+                { "type": "variable", "variable": "coverAmount" },
+                { "type": "literal", "literal": 2 }
+              ]
+            }
           }
         ]
       }
