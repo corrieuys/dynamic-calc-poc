@@ -19,7 +19,20 @@ export interface CalculatorConfig {
     calculationExpression: Expression;
 }
 
-function evaluateExpression(expr: Expression, vars: Record<string, any>): any {
+// Add constants similar to Java implementation
+export const OutputVariables = {
+    COVER: 'cover',
+    PREMIUM: 'premium'
+};
+
+// Add interface for calculation result
+export interface CalculationResult {
+    cover: number;
+    premium: number;
+}
+
+// Export evaluateExpression for direct use
+export function evaluateExpression(expr: Expression, vars: Record<string, any>): any {
     if (expr.calculationExpression) {
         return evaluateExpression(expr.calculationExpression, vars);
     }
@@ -103,18 +116,40 @@ export function calculate(expr: Expression, variableList: Variable[]): any {
 
 export function calculateAll(
     calculators: CalculatorConfig[],
-    variableList: Variable[]
-): { total: number; details: { name: string; total: any }[] } {
+    variableList: Variable[],
+    initialCover: number,
+    initialPremium: number
+): CalculationResult {
     const details: { name: string; total: any }[] = [];
     const vars: Record<string, any> = {};
+
+    // Add variables from the provided list
     variableList.forEach(v => { vars[v.name] = v.value; });
 
+    // Add cover and premium to the variables map
+    vars[OutputVariables.COVER] = initialCover;
+    vars[OutputVariables.PREMIUM] = initialPremium;
+
+    // Process each calculator configuration
     calculators.forEach(calcConfig => {
         const output = evaluateExpression(calcConfig.calculationExpression, vars);
         vars[calcConfig.outputVariable] = output;
         details.push({ name: calcConfig.calculationName, total: output });
     });
 
-    const grandTotal = details.length > 0 ? details[details.length - 1].total : 0;
-    return { total: grandTotal, details };
+    // Extract final cover and premium values
+    const finalCover = vars[OutputVariables.COVER] || 0;
+    const finalPremium = vars[OutputVariables.PREMIUM] || 0;
+
+    // Round according to requirements (similar to Java implementation)
+    // Cover to whole number and premium to 2 decimal places
+    const roundedCover = Math.round(finalCover);
+    const roundedPremium = Number(finalPremium.toFixed(2));
+
+    // Return the calculation result
+    return {
+        cover: roundedCover,
+        premium: roundedPremium
+    };
 }
+

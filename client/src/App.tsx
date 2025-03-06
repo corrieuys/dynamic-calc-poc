@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { calculateAll } from "./dynamicCalculator.ts";
+import { calculateAll, OutputVariables, evaluateExpression } from "./dynamicCalculator.ts";
 import initialData from "./initialJson.json";
 import { adaptInitialData } from "./utils/calculatorUtils";
 import theme from "./styles/theme";
@@ -32,7 +32,7 @@ export interface CalculatorSchema {
 }
 
 export const initialVariables: Variable[] = [
-  { name: "coverAmount", value: 20000 },
+  // { name: "coverAmount", value: 20000 },
   { name: "accidentalFactor", value: 1.0 },
   { name: "pricingFactorsBase", value: 100.0 },
   { name: "pricingFactorsAids", value: 0.0 },
@@ -58,10 +58,16 @@ export const initialVariables: Variable[] = [
   { name: "policyType", value: "standard" }
 ];
 
+const initialCoverAndPremium = {
+  cover: 20000,
+  premium: 0
+};
+
+
 export const operationTypes: string[] = ["add", "subtract", "multiply", "divide", "if", "max", "set"];
 
-function toSchemaJson(data: CalculatorSchema): any {
-  const transformExpression = (expr: Expression): any => {
+function toSchemaJson(data: CalculatorSchema): Record<string, any> {
+  const transformExpression = (expr: Expression): Record<string, any> => {
     if (expr.calculationExpression) {
       return {
         calculationExpression: transformExpression(expr.calculationExpression)
@@ -108,7 +114,7 @@ const colors = {
 };
 
 // Header component
-const Header: React.FC<{ title: string }> = ({ title }) => (
+const Header: React.FC<{ title: string }> = ({ title }: { title: string }) => (
   <header style={{
     borderBottom: `1px solid ${colors.border}`,
     paddingBottom: "15px",
@@ -135,7 +141,7 @@ const TabContainer: React.FC<TabProps & { children: React.ReactNode }> = ({
   activeTab, 
   onTabChange, 
   children 
-}) => {
+}: TabProps & { children: React.ReactNode }) => {
   return (
     <div>
       <div style={{
@@ -168,7 +174,11 @@ const TabButton: React.FC<{
   title: string; 
   isActive: boolean; 
   onClick: () => void 
-}> = ({ title, isActive, onClick }) => (
+}> = ({ title, isActive, onClick }: { 
+  title: string; 
+  isActive: boolean; 
+  onClick: () => void 
+}) => (
   <button
     onClick={onClick}
     style={{
@@ -193,7 +203,7 @@ interface ToolbarProps {
   onAddCalculation: () => void;
 }
 
-const CalculationToolbar: React.FC<ToolbarProps> = ({ onCalculate, onAddCalculation }) => (
+const CalculationToolbar: React.FC<ToolbarProps> = ({ onCalculate, onAddCalculation }: ToolbarProps) => (
   <div style={{
     display: "flex",
     justifyContent: "space-between",
@@ -264,7 +274,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
   variables, 
   onAddVariable,
   onUpdateVariable 
-}) => (
+}: VariablesPanelProps) => (
   <div style={{ 
     backgroundColor: colors.card,
     padding: "20px",
@@ -284,7 +294,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
       gap: "10px", 
       marginBottom: "20px" 
     }}>
-      {variables.map((v, index) => (
+      {variables.map((v: Variable, index: number) => (
         <div key={index} style={{ 
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
@@ -298,7 +308,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
             type="text"
             value={v.name}
             placeholder="Variable Name"
-            onChange={(e) => onUpdateVariable(index, "name", e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdateVariable(index, "name", e.target.value)}
             style={{
               padding: "6px 8px",
               borderRadius: "4px",
@@ -312,7 +322,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
               type="text"
               value={v.value}
               placeholder="String Value"
-              onChange={(e) => onUpdateVariable(index, "value", e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdateVariable(index, "value", e.target.value)}
               style={{
                 padding: "6px 8px",
                 borderRadius: "4px",
@@ -326,7 +336,7 @@ const VariablesPanel: React.FC<VariablesPanelProps> = ({
               type="number"
               value={v.value}
               placeholder="Number Value"
-              onChange={(e) => onUpdateVariable(index, "value", Number(e.target.value))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdateVariable(index, "value", Number(e.target.value))}
               style={{
                 padding: "6px 8px",
                 borderRadius: "4px",
@@ -372,7 +382,7 @@ const CalculationStep: React.FC<CalculationStepProps> = ({
   onUpdate,
   onRemove,
   variables
-}) => {
+}: CalculationStepProps) => {
   return (
     <div style={{ 
       border: `1px solid ${colors.border}`,
@@ -424,7 +434,7 @@ const CalculationStep: React.FC<CalculationStepProps> = ({
           <input
             type="text"
             value={calc.calculationName}
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const updatedCalc = { ...calc, calculationName: e.target.value };
               onUpdate(index, updatedCalc);
             }}
@@ -450,7 +460,7 @@ const CalculationStep: React.FC<CalculationStepProps> = ({
           <input
             type="text"
             value={calc.outputVariable}
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const updatedCalc = { ...calc, outputVariable: e.target.value };
               onUpdate(index, updatedCalc);
             }}
@@ -494,7 +504,7 @@ interface ResultsDisplayProps {
   results: any;
 }
 
-const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
+const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }: ResultsDisplayProps) => {
   if (!results) return null;
   
   return (
@@ -513,14 +523,28 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
       <div style={{
         flex: "1",
         borderRight: `1px solid ${colors.lightBorder}`,
-        paddingRight: "15px"
+        paddingRight: "15px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px"
       }}>
-        <div style={{ fontWeight: 600, marginBottom: "5px", color: colors.primary }}>Final Result:</div>
-        <div style={{ 
-          fontSize: "24px", 
-          fontWeight: 700, 
-          color: colors.primary 
-        }}>{results.total}</div>
+        <div>
+          <div style={{ fontWeight: 600, marginBottom: "5px", color: colors.primary }}>Premium:</div>
+          <div style={{ 
+            fontSize: "24px", 
+            fontWeight: 700, 
+            color: colors.primary 
+          }}>{results.premium || results.total}</div>
+        </div>
+        
+        <div>
+          <div style={{ fontWeight: 600, marginBottom: "5px", color: colors.secondary }}>Cover Amount:</div>
+          <div style={{ 
+            fontSize: "24px", 
+            fontWeight: 700, 
+            color: colors.secondary 
+          }}>{results.cover?.toLocaleString() || "N/A"}</div>
+        </div>
       </div>
       
       <div style={{ flex: "2" }}>
@@ -557,7 +581,7 @@ interface JSONViewerProps {
   data: any;
 }
 
-const JSONViewer: React.FC<JSONViewerProps> = ({ data }) => {
+const JSONViewer: React.FC<JSONViewerProps> = ({ data }: JSONViewerProps) => {
   const jsonOutput = toSchemaJson(data);
   
   return (
@@ -621,22 +645,54 @@ export function App(): JSX.Element {
 
   const addVariable = (): void => setVariables([...variables, { name: "", value: 0 }]);
   const updateVariable = (index: number, key: string, value: any): void =>
-    setVariables(variables.map((v, i) => (i === index ? { ...v, [key]: value } : v)));
+    setVariables(variables.map((v: any, i: number) => (i === index ? { ...v, [key]: value } : v)));
 
   const calculateResult = (): void => {
     try {
-      const res = calculateAll(data.calculationConfigs, variables);
-      const newVarsMap: Record<string, any> = {};
-      variables.forEach((v) => {
-        newVarsMap[v.name] = v.value;
+      // Create a working copy of variables to track intermediate results
+      const vars: Record<string, any> = {};
+      variables.forEach((v: Variable) => { vars[v.name] = v.value; });
+      
+      // Add initial cover and premium
+      vars[OutputVariables.COVER] = initialCoverAndPremium.cover;
+      vars[OutputVariables.PREMIUM] = initialCoverAndPremium.premium;
+      
+      // Process calculations one by one to track intermediate results
+      const details: { name: string; total: any }[] = [];
+      
+      data.calculationConfigs.forEach((calc: any) => {
+        // Evaluate this calculation using current variable state
+        const result: any = evaluateExpression(calc.calculationExpression, vars);
+        
+        // Store the result in our variables map for next calculations
+        vars[calc.outputVariable] = result;
+        
+        // Track this calculation for display
+        details.push({ name: calc.calculationName, total: result });
       });
-      data.calculationConfigs.forEach((calc, idx) => {
-        newVarsMap[calc.outputVariable] = res.details[idx]?.total;
-      });
-      const newVarList = Object.entries(newVarsMap).map(([name, value]) => ({ name, value }));
+      
+      // Get final cover and premium values
+      const finalCover: number = vars[OutputVariables.COVER] || initialCoverAndPremium.cover;
+      const finalPremium: number = vars[OutputVariables.PREMIUM] || initialCoverAndPremium.premium;
+      
+      // Create display results
+      const displayResults: {
+        total: number;
+        details: Array<{ name: string; total: any }>;
+        cover: number;
+        premium: number;
+      } = {
+        total: finalPremium,
+        details: details,
+        cover: finalCover,
+        premium: finalPremium
+      };
+      
+      // Update variables list with all calculation results
+      const newVarList: Variable[] = Object.entries(vars).map(([name, value]: [string, any]) => ({ name, value }));
       setVariables(newVarList);
-      setResults(res);
-      setActiveTab("calculator"); // Switch to calculator tab to display results
+      setResults(displayResults);
+      setActiveTab("calculator");
     } catch (error: any) {
       alert(error.message);
     }
@@ -703,7 +759,11 @@ export function App(): JSX.Element {
 }
 
 // NodeEditor component with improved styling
-export function NodeEditor({ node, onChange, variables }: NodeEditorProps): JSX.Element {
+export function NodeEditor({ 
+  node, 
+  onChange, 
+  variables 
+}: NodeEditorProps): JSX.Element {
   // Check for calculationExpression first
   if (node.calculationExpression) {
     return (
@@ -732,8 +792,8 @@ export function NodeEditor({ node, onChange, variables }: NodeEditorProps): JSX.
   const currentType =
     node.literal !== undefined ? "literal" : node.variable ? "variable" : node.operation ? "operation" : "literal";
 
-  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newType = e.target.value;
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    const newType: string = e.target.value;
     if (newType === currentType) return;
     if (newType === "literal") onChange({ literal: 0 });
     else if (newType === "variable") onChange({ variable: variables[0]?.name || "" });
@@ -851,19 +911,23 @@ export function NodeEditor({ node, onChange, variables }: NodeEditorProps): JSX.
 }
 
 // OperationNode component with improved styling
-export function OperationNode({ node, onChange, variables }: OperationNodeProps): JSX.Element {
+export function OperationNode({ 
+  node, 
+  onChange, 
+  variables 
+}: OperationNodeProps): JSX.Element {
   const handleOperationChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     onChange({ ...node, operation: e.target.value });
   };
 
   const handleOperandChange = (index: number, updatedOperand: Expression): void => {
-    const newOperands = [...(node.operands || [])];
+    const newOperands: Expression[] = [...(node.operands || [])];
     newOperands[index] = updatedOperand;
     onChange({ ...node, operands: newOperands });
   };
 
   const removeOperand = (index: number): void => {
-    onChange({ ...node, operands: (node.operands || []).filter((_, i) => i !== index) });
+    onChange({ ...node, operands: (node.operands || []).filter((_, i: number) => i !== index) });
   };
 
   const addOperand = (type: string): void => {
@@ -882,7 +946,7 @@ export function OperationNode({ node, onChange, variables }: OperationNodeProps)
     onChange({ ...node, operands: [...(node.operands || []), newOperand] });
   };
 
-  const [selectedOperandType, setSelectedOperandType] = useState("");
+  const [selectedOperandType, setSelectedOperandType] = useState<string>("");
 
   return (
     <div style={{ 
@@ -1070,7 +1134,7 @@ export function OperationNode({ node, onChange, variables }: OperationNodeProps)
           }}>
             <select
               value={selectedOperandType}
-              onChange={(e) => setSelectedOperandType(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedOperandType(e.target.value)}
               style={{
                 flex: 1,
                 padding: "6px 10px",
@@ -1090,7 +1154,7 @@ export function OperationNode({ node, onChange, variables }: OperationNodeProps)
               ))}
             </select>
             <button
-              onClick={() => {
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                 if (selectedOperandType) {
                   addOperand(selectedOperandType);
                   setSelectedOperandType("");
@@ -1115,6 +1179,7 @@ export function OperationNode({ node, onChange, variables }: OperationNodeProps)
   );
 }
 
+interface OperationNodeProps extends NodeEditorProps {}
 interface NodeEditorProps {
   node: Expression;
   onChange: (node: Expression) => void;
@@ -1130,3 +1195,4 @@ interface NodeEditorProps {
 }
 
 interface OperationNodeProps extends NodeEditorProps {}
+

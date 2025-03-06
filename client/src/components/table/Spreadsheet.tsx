@@ -16,7 +16,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
   onEditHeader,
   onDeleteRow,
   onDeleteColumn
-}) => {
+}: any) => {
   const { columns, rows } = table;
 
   return (
@@ -36,7 +36,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
         <thead>
           <tr>
             <th style={{ padding: theme.spacing.sm, minWidth: "40px" }}></th>
-            {columns.map((col, index) => (
+            {columns.map((col: any, index: number) => (
               <th key={index} style={{ padding: theme.spacing.xs }}>
                 <button 
                   onClick={() => onDeleteColumn(index)}
@@ -80,7 +80,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, rowIndex) => (
+          {rows.map((row: any, rowIndex: number) => (
             <tr 
               key={rowIndex}
               style={{

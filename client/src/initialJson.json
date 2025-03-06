@@ -1,61 +1,313 @@
 {
-  "calculatorName": "Insurance Policy Calculations",
-  "id": "IPC-001",
+  "calculatorName": "Main Life Premium Calculator",
+  "id": "MLPC-001",
   "calculationConfigs": [
     {
-      "calculationName": "Intermediate Calc",
-      "outputVariable": "tempResult",
+      "calculationName": "Life Qx Base Component",
+      "outputVariable": "baseComponent",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "multiply",
+        "operands": [
+          {
+            "type": "operation",
+            "operation": "add",
+            "operands": [
+              { "type": "variable", "variable": "pricingFactorsConstant" },
+              {
+                "type": "operation",
+                "operation": "divide",
+                "operands": [
+                  { "type": "variable", "variable": "pricingFactorsBase" },
+                  { "type": "literal", "literal": 100 }
+                ]
+              }
+            ]
+          },
+          { "type": "variable", "variable": "baseQxFactor" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Qx Aids Component",
+      "outputVariable": "aidsComponent",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "multiply",
+        "operands": [
+          { "type": "variable", "variable": "pricingFactorsAids" },
+          { "type": "variable", "variable": "aidsQxFactor" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Qx Combined Components",
+      "outputVariable": "combinedComponents",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "add",
+        "operands": [
+          { "type": "variable", "variable": "baseComponent" },
+          { "type": "variable", "variable": "aidsComponent" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Qx",
+      "outputVariable": "lifeQx",
       "calculationExpression": {
         "type": "operation",
         "operation": "multiply",
         "operands": [
           { "type": "variable", "variable": "accidentalFactor" },
-          { "type": "literal", "literal": 2 }
+          { "type": "variable", "variable": "combinedComponents" }
         ]
       }
     },
     {
-      "calculationName": "Base Cover",
-      "outputVariable": "cover",
+      "calculationName": "Life Annual Premium",
+      "outputVariable": "lifeAnnualPremium",
       "calculationExpression": {
         "type": "operation",
         "operation": "multiply",
         "operands": [
-          { "type": "variable", "variable": "coverAmount" },
-          { "type": "literal", "literal": 2 }
+          { "type": "variable", "variable": "cover" },
+          { "type": "variable", "variable": "lifeQx" }
         ]
       }
     },
     {
-      "calculationName": "Premium Adjustment",
-      "outputVariable": "premium",
+      "calculationName": "Life Monthly Premium",
+      "outputVariable": "lifeMonthlyPremium",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "divide",
+        "operands": [
+          { "type": "variable", "variable": "lifeAnnualPremium" },
+          { "type": "literal", "literal": 12 }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Exclude Underwriting",
+      "outputVariable": "lifeExcludeUnderWriting",
       "calculationExpression": {
         "type": "operation",
         "operation": "if",
-        "comparator": "isStringValue",
+        "comparator": "==",
         "operands": [
-          { "type": "variable", "variable": "policyType" },
-          { "type": "literal", "literal": "standard" },
+          { "type": "variable", "variable": "fixedCalculatedNonePrice" },
+          { "type": "literal", "literal": true },
+          { "type": "literal", "literal": 0 },
           {
-            "calculationExpression": {
-              "type": "operation",
-              "operation": "multiply",
-              "operands": [
-                { "type": "variable", "variable": "coverAmount" },
-                { "type": "variable", "variable": "tempResult" }
-              ]
-            }
-          },
-          {
-            "calculationExpression": {
-              "type": "operation",
-              "operation": "multiply",
-              "operands": [
-                { "type": "variable", "variable": "coverAmount" },
-                { "type": "literal", "literal": 2 }
-              ]
-            }
+            "type": "operation",
+            "operation": "divide",
+            "operands": [
+              { "type": "variable", "variable": "underWritingExpense" },
+              { "type": "variable", "variable": "durationFactor" }
+            ]
           }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Expenses",
+      "outputVariable": "lifeExpenses",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "if",
+        "comparator": "==",
+        "operands": [
+          { "type": "variable", "variable": "fixedCalculatedNonePrice" },
+          { "type": "literal", "literal": true },
+          { "type": "literal", "literal": 0 },
+          {
+            "type": "operation",
+            "operation": "add",
+            "operands": [
+              { "type": "variable", "variable": "lifeExcludeUnderWriting" },
+              { "type": "variable", "variable": "initialExpense" },
+              { "type": "variable", "variable": "recurringExpense" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Distribution Rate Step 1",
+      "outputVariable": "distributionStep1",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "add",
+        "operands": [
+          { "type": "literal", "literal": 1 },
+          { "type": "variable", "variable": "intermediaryDiscount" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Distribution Rate Step 2",
+      "outputVariable": "distributionStep2",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "add",
+        "operands": [
+          { "type": "literal", "literal": 1 },
+          { "type": "variable", "variable": "asAndWhenCommission" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Distribution Rate Step 3",
+      "outputVariable": "distributionStep3",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "add",
+        "operands": [
+          { "type": "literal", "literal": 1 },
+          { "type": "variable", "variable": "difLoading" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Distribution Rate",
+      "outputVariable": "lifeDistributionRate",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "subtract",
+        "operands": [
+          {
+            "type": "operation",
+            "operation": "multiply",
+            "operands": [
+              { "type": "variable", "variable": "distributionStep1" },
+              { "type": "variable", "variable": "distributionStep2" },
+              { "type": "variable", "variable": "distributionStep3" }
+            ]
+          },
+          { "type": "literal", "literal": 1 }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Profit Factor",
+      "outputVariable": "profitFactor",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "multiply",
+        "operands": [
+          {
+            "type": "operation",
+            "operation": "divide",
+            "operands": [
+              { "type": "variable", "variable": "initialTargetValue" },
+              { "type": "literal", "literal": 100 }
+            ]
+          },
+          { "type": "variable", "variable": "factor1Impact" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Profit",
+      "outputVariable": "lifeProfit",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "if",
+        "comparator": "<",
+        "operands": [
+          { "type": "variable", "variable": "profitFactor" },
+          { "type": "literal", "literal": 0 },
+          { "type": "literal", "literal": 0 },
+          { "type": "variable", "variable": "profitFactor" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Expense Loading Factor",
+      "outputVariable": "expenseLoadingFactor",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "divide",
+        "operands": [
+          { "type": "variable", "variable": "expenseLoading" },
+          { "type": "literal", "literal": 100 }
+        ]
+      }
+    },
+    {
+      "calculationName": "Combined Loadings",
+      "outputVariable": "combinedLoadings",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "add",
+        "operands": [
+          { "type": "variable", "variable": "expenseLoadingFactor" },
+          { "type": "variable", "variable": "rewardExpenseValue" },
+          { "type": "variable", "variable": "lifeDistributionRate" },
+          { "type": "variable", "variable": "lifeProfit" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Premium Pre-Profit Denominator",
+      "outputVariable": "premProfitDenominator",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "subtract",
+        "operands": [
+          { "type": "literal", "literal": 1 },
+          { "type": "variable", "variable": "combinedLoadings" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Premium Pre-Profit",
+      "outputVariable": "lifePremPreProfit",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "divide",
+        "operands": [
+          {
+            "type": "operation",
+            "operation": "add",
+            "operands": [
+              { "type": "variable", "variable": "lifeMonthlyPremium" },
+              { "type": "variable", "variable": "lifeExpenses" }
+            ]
+          },
+          { "type": "variable", "variable": "premProfitDenominator" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Age and Relationship Factor",
+      "outputVariable": "ageRelationshipFactor",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "multiply",
+        "operands": [
+          { "type": "variable", "variable": "ageTopUpFactor" },
+          { "type": "variable", "variable": "relationshipTopUpFactor" }
+        ]
+      }
+    },
+    {
+      "calculationName": "Life Full Monthly Premium",
+      "outputVariable": "premium",
+      "calculationExpression": {
+        "type": "operation",
+        "operation": "add",
+        "operands": [
+          {
+            "type": "operation",
+            "operation": "multiply",
+            "operands": [
+              { "type": "variable", "variable": "lifePremPreProfit" },
+              { "type": "variable", "variable": "ageRelationshipFactor" }
+            ]
+          },
+          { "type": "variable", "variable": "topUpExpenseFactor" }
         ]
       }
     }
