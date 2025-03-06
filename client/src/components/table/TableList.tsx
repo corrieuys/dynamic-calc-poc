@@ -16,7 +16,7 @@ const TableList: React.FC<TableListProps> = ({
   onSelect, 
   onAdd, 
   onDelete 
-}) => {
+}:any) => {
   return (
     <div style={{
       backgroundColor: theme.colors.card,
@@ -52,7 +52,7 @@ const TableList: React.FC<TableListProps> = ({
         flexDirection: "column",
         gap: theme.spacing.xs
       }}>
-        {tables.map((table) => (
+        {tables.map((table:any) => (
           <div 
             key={table.name} 
             style={{

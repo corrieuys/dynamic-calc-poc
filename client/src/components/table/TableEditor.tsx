@@ -10,11 +10,11 @@ const TableEditor: React.FC = () => {
   const [version, setVersion] = useState<string>('1.0');
   const [sqlScript, setSqlScript] = useState<string>('');
 
-  const selectedTable = tables.find((t) => t.name === selectedTableName) || null;
+  const selectedTable = tables.find((t:any) => t.name === selectedTableName) || null;
 
   const addTable = (): void => {
     const name = window.prompt('Enter table name');
-    if (!name || tables.some((t) => t.name === name)) {
+    if (!name || tables.some((t:any) => t.name === name)) {
       alert('Please enter a unique table name');
       return;
     }
@@ -29,7 +29,7 @@ const TableEditor: React.FC = () => {
 
   const deleteTable = (name: string): void => {
     if (window.confirm(`Are you sure you want to delete the table "${name}"?`)) {
-      setTables(tables.filter((t) => t.name !== name));
+      setTables(tables.filter((t:any) => t.name !== name));
       if (selectedTableName === name) {
         setSelectedTableName(null);
       }
@@ -37,11 +37,11 @@ const TableEditor: React.FC = () => {
   };
 
   const editCell = (rowIndex: number, column: string, value: string): void => {
-    setTables(tables.map((t) =>
+    setTables(tables.map((t:any) =>
       t.name === selectedTableName
         ? {
             ...t,
-            rows: t.rows.map((row, i) =>
+            rows: t.rows.map((row:any, i:any) =>
               i === rowIndex ? { ...row, [column]: value } : row
             ),
           }
@@ -53,12 +53,12 @@ const TableEditor: React.FC = () => {
     if (!selectedTable) return;
     if (selectedTable.columns[columnIndex] === 'Version') return;
     
-    setTables(tables.map((t) =>
+    setTables(tables.map((t:any) =>
       t.name === selectedTableName
         ? {
             ...t,
-            columns: t.columns.map((col, i) => (i === columnIndex ? newName : col)),
-            rows: t.rows.map((row) => {
+            columns: t.columns.map((col:any, i:any) => (i === columnIndex ? newName : col)),
+            rows: t.rows.map((row:any) => {
               const oldName = t.columns[columnIndex];
               const { [oldName]: value, ...rest } = row;
               return { ...rest, [newName]: value };
@@ -71,13 +71,13 @@ const TableEditor: React.FC = () => {
   const addRow = (): void => {
     if (!selectedTable) return;
     
-    setTables(tables.map((t) =>
+    setTables(tables.map((t:any) =>
       t.name === selectedTableName
         ? {
             ...t,
             rows: [
               ...t.rows,
-              Object.fromEntries(t.columns.map((col) => [col, col === 'Version' ? version : ''])),
+              Object.fromEntries(t.columns.map((col:any) => [col, col === 'Version' ? version : ''])),
             ],
           }
         : t
@@ -87,21 +87,21 @@ const TableEditor: React.FC = () => {
   const addColumn = (): void => {
     if (!selectedTable) return;
     
-    setTables(tables.map((t) =>
+    setTables(tables.map((t:any) =>
       t.name === selectedTableName
         ? {
             ...t,
             columns: [...t.columns, `Column${t.columns.length}`],
-            rows: t.rows.map((row) => ({ ...row, [`Column${t.columns.length}`]: '' })),
+            rows: t.rows.map((row:any) => ({ ...row, [`Column${t.columns.length}`]: '' })),
           }
         : t
     ));
   };
 
   const deleteRow = (rowIndex: number): void => {
-    setTables(tables.map((t) =>
+    setTables(tables.map((t:any) =>
       t.name === selectedTableName
-        ? { ...t, rows: t.rows.filter((_, i) => i !== rowIndex) }
+        ? { ...t, rows: t.rows.filter((_:any, i:any) => i !== rowIndex) }
         : t
     ));
   };
@@ -113,12 +113,12 @@ const TableEditor: React.FC = () => {
       return;
     }
     
-    setTables(tables.map((t) =>
+    setTables(tables.map((t:any) =>
       t.name === selectedTableName
         ? {
             ...t,
-            columns: t.columns.filter((_, i) => i !== columnIndex),
-            rows: t.rows.map((row) => {
+            columns: t.columns.filter((_:any, i:any) => i !== columnIndex),
+            rows: t.rows.map((row:any) => {
               const columnName = t.columns[columnIndex];
               const { [columnName]: _, ...rest } = row;
               return rest;
@@ -138,9 +138,9 @@ const TableEditor: React.FC = () => {
       setSqlScript('No rows to generate SQL for');
       return;
     }
-    const sql = rows.map((row) => {
+    const sql = rows.map((row:any) => {
       const cols = columns.join(', ');
-      const values = columns.map((col) => `'${row[col] || ''}'`).join(', ');
+      const values = columns.map((col:any) => `'${row[col] || ''}'`).join(', ');
       return `INSERT INTO ${name} (${cols}) VALUES (${values});`;
     }).join('\n');
     setSqlScript(sql);
@@ -151,7 +151,7 @@ const TableEditor: React.FC = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = (e:any) => {
       const text = e.target.result as string;
       const lines = text.split('\n').map((line) => line.trim()).filter((line) => line);
       if (lines.length === 0) {
@@ -175,7 +175,7 @@ const TableEditor: React.FC = () => {
 
       if (selectedTable) {
         // Overwrite the selected table's contents
-        setTables(tables.map((t) =>
+        setTables(tables.map((t:any) =>
           t.name === selectedTableName
             ? {
                 ...t,
@@ -187,7 +187,7 @@ const TableEditor: React.FC = () => {
       } else {
         // Create new table if none selected
         const tableName = file.name.replace('.csv', '') || 'ImportedTable';
-        if (tables.some((t) => t.name === tableName)) {
+        if (tables.some((t:any) => t.name === tableName)) {
           alert('Table name already exists; please select a table to overwrite or rename your file');
           return;
         }
@@ -212,7 +212,7 @@ const TableEditor: React.FC = () => {
     
     const { name, columns, rows } = selectedTable;
     const headerRow = columns.join(',');
-    const dataRows = rows.map(row => columns.map(col => row[col] || '').join(','));
+    const dataRows = rows.map((row:any) => columns.map((col:any) => row[col] || '').join(','));
     const csvContent = [headerRow, ...dataRows].join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -251,7 +251,7 @@ const TableEditor: React.FC = () => {
             <input
               type="text"
               value={version}
-              onChange={(e) => setVersion(e.target.value)}
+              onChange={(e:any) => setVersion(e.target.value)}
               placeholder="Set version"
               style={{
                 padding: theme.spacing.sm,
@@ -325,7 +325,7 @@ const TableEditor: React.FC = () => {
         <TableList
           tables={tables}
           selectedTable={selectedTableName}
-          onSelect={(table) => setSelectedTableName(table.name)}
+          onSelect={(table:any) => setSelectedTableName(table.name)}
           onAdd={addTable}
           onDelete={deleteTable}
         />

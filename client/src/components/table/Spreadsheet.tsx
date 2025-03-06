@@ -59,12 +59,12 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
           </tr>
           <tr>
             <th style={{ padding: theme.spacing.sm }}></th>
-            {columns.map((col, index) => (
+            {columns.map((col:any, index:any) => (
               <th key={index} style={{ padding: theme.spacing.sm }}>
                 <input
                   type="text"
                   value={col}
-                  onChange={(e) => onEditHeader(index, e.target.value)}
+                  onChange={(e:any) => onEditHeader(index, e.target.value)}
                   disabled={col === 'Version'}
                   style={{
                     width: "100%",
@@ -106,7 +106,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
                   Del
                 </button>
               </td>
-              {columns.map((col, colIndex) => (
+              {columns.map((col:any, colIndex:any) => (
                 <td key={colIndex} style={{ padding: theme.spacing.xs }}>
                   {col === 'Version' ? (
                     <span style={{ 
@@ -122,7 +122,7 @@ const Spreadsheet: React.FC<SpreadsheetProps> = ({
                     <input
                       type="text"
                       value={row[col] || ''}
-                      onChange={(e) => onEditCell(rowIndex, col, e.target.value)}
+                      onChange={(e:any) => onEditCell(rowIndex, col, e.target.value)}
                       style={{
                         width: "100%",
                         padding: theme.spacing.xs,
